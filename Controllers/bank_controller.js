@@ -3,17 +3,17 @@ const Bank = require("../Models/bank_model");
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
 const Transaction = require("../Models/transaction_model");
-exports.getClient = catchAsync(async (req, res, next) => {
-  const client = await Bank.findById(req.params.id);
-  if (!client) {
-    return next(
-      new AppError(`couldn't find client with that ID :${req.params.id}`, 400)
-    );
+
+exports.getUser = catchAsync(async (req, res, next) => {
+  console.log(req.user);
+  const user = await Bank.findOne({ phone: req.user.phone });
+  if (!user) {
+    return next(new AppError(`couldn't find user with that user`, 400));
   }
   res.status(200).json({
     status: "success",
     data: {
-      client,
+      user,
     },
   });
 });
@@ -50,13 +50,15 @@ exports.withdrawMoney = catchAsync(async (req, res, next) => {
 });
 exports.depositMoney = catchAsync(async (req, res, next) => {
   const moneyDeposited = req.body.depositAmount * 1;
+  if (!moneyDeposited)
+    return next(new AppError("The must enter amount to deposit ", 400));
   if (moneyDeposited <= 0)
     return next(new AppError("You must enter a number > 0", 400));
 
   req.user.balance = req.user.balance + moneyDeposited;
   const updatedClient = await req.user.save({ validateBeforeSave: false });
 
-  const transaction = await Transaction.create({
+  await Transaction.create({
     phone: req.user.phone,
     typeOfTransaction: "Deposit",
     amount: moneyDeposited,
@@ -65,7 +67,7 @@ exports.depositMoney = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: "success",
     data: {
-      updatedClient,
+      message: `Successfully operation your remaining balance is : ${updatedClient.balance}`,
     },
   });
 });
