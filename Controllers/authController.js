@@ -79,3 +79,12 @@ exports.protectTour = catchAsync(async (req, res, next) => {
   req.user = user;
   next();
 });
+exports.restrictTo = (role) => {
+  return (req, res, next) => {
+    if (!(req.user.role === "admin"))
+      return next(
+        new AppError("you aren't authorized to make this request", 403)
+      );
+    next();
+  };
+};

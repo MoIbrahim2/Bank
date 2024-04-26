@@ -2,6 +2,14 @@ const mongoose = require("mongoose");
 const validator = require("validator");
 const bcrypt = require("bcryptjs");
 const bankSchema = mongoose.Schema({
+  role: {
+    type: String,
+    enum: {
+      values: ["admin", "user"],
+      message: "Unauthorized role",
+    },
+    default: "user",
+  },
   name: {
     type: String,
     required: [true, "A client must have a name"],

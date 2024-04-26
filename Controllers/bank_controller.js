@@ -3,7 +3,15 @@ const Bank = require("../Models/bank_model");
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
 const Transaction = require("../Models/transaction_model");
-
+exports.getAllUsers = catchAsync(async (req, res, next) => {
+  const users = await Bank.find();
+  res.status(200).json({
+    status: "success",
+    data: {
+      users,
+    },
+  });
+});
 exports.getUser = catchAsync(async (req, res, next) => {
   console.log(req.user);
   const user = await Bank.findOne({ phone: req.user.phone });
