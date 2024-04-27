@@ -34,9 +34,7 @@ const sendErrorProduction = (err, res) => {
   if (err.isOperational === true) {
     res.status(err.statusCode).json({
       status: err.status,
-      error: err,
       message: err.message,
-      stack: err.stack,
     });
   } else {
     console.error("Error 💣 ", err);
