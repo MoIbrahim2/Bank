@@ -1,10 +1,8 @@
 const AppError = require("../utils/appError");
 
-const handleDuplicatFieldsDb = (err) => {
+const handleDuplicateFieldsDb = (err) => {
   let message;
-  if (err.keyValue.email) {
-    message = `The email : '${err.keyValue.email}' is already signed up`;
-  } else if (err.keyValue.phone) {
+  if (err.keyValue.phone) {
     message = `The phone : '${err.keyValue.phone}' is already signed up`;
   }
   return new AppError(message, 400);
@@ -16,7 +14,14 @@ const handleValidationErrorDb = (err) => {
   const message = `Invalid input error/errors.${errors.join(". ")}`;
   return new AppError(message, 400);
 };
-
+const handleTokenError = (err) => {
+  const message = "Invalid token. Please login again!";
+  return new AppError(message, 401);
+};
+const handleExpiredToken = (err) => {
+  const message = "Expired Token";
+  return new AppError(message, 401);
+};
 const sendErrorDevelopment = (err, res) => {
   res.status(err.statusCode).json({
     status: err.status,
@@ -35,7 +40,6 @@ const sendErrorProduction = (err, res) => {
     });
   } else {
     console.error("Error 💣 ", err);
-
     res.status(err.statusCode).json({
       status: err.status,
       message: err.message,
@@ -51,13 +55,22 @@ module.exports = (err, req, res, next) => {
     sendErrorDevelopment(err, res);
   } else if (process.env.NODE_ENV == "production") {
     let error = { ...err, name: err.name, message: err.message };
+    if (error.name === "CastError") {
+      error = handleCastErrorDb(error);
+    }
     if (error.code === 11000) {
-      error = handleDuplicatFieldsDb(error);
+      error = handleDuplicateFieldsDb(error);
     }
     if (error.name === "ValidationError") {
       error = handleValidationErrorDb(error);
     }
+    if (error.name === "JsonWebTokenError") {
+      error = handleTokenError(error);
+    }
+    if (error.name === "TokenExpiredError") {
+      error = handleExpiredToken(error);
+    }
     sendErrorProduction(error, res);
+    next();
   }
-  next();
 };
